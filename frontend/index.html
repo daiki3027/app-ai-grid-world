@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GridWorld Q-learning</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>GridWorld × Q-learning</h1>
+      <p>学習が進むほど最短経路へ近づく様子を観察できます。</p>
+    </header>
+
+    <section class="controls">
+      <div class="buttons">
+        <button id="start">Start</button>
+        <button id="pause">Pause</button>
+        <button id="reset">Reset</button>
+        <button id="toggle-learning">Toggle AI</button>
+      </div>
+      <div class="speed">
+        <span>Speed:</span>
+        <button data-speed="1">1x</button>
+        <button data-speed="5">5x</button>
+        <button data-speed="20">20x</button>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div>Episode: <span id="episode">-</span></div>
+      <div>Step: <span id="step">-</span></div>
+      <div>Epsilon: <span id="epsilon">-</span></div>
+      <div>Total Reward: <span id="total_reward">-</span></div>
+      <div>Success Rate (recent): <span id="success_rate">-</span></div>
+      <div>Learning: <span id="learning">-</span></div>
+      <div>Speed: <span id="speed">1x</span></div>
+      <div>Last Action: <span id="last_action">-</span></div>
+      <div>Status: <span id="status">connecting...</span></div>
+    </section>
+
+    <section class="board">
+      <canvas id="canvas" width="600" height="600"></canvas>
+    </section>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
