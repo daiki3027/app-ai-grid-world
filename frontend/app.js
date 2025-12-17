@@ -88,11 +88,11 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const colors = {
-    0: "#1e293b",
-    1: "#111827",
-    2: "#2563eb",
-    3: "#22c55e",
-    4: "#ef4444",
+    0: "#eef4ff",
+    1: "#cbd5e1",
+    2: "#93c5fd",
+    3: "#86efac",
+    4: "#fecdd3",
   };
 
   for (let y = 0; y < grid.length; y++) {
@@ -100,7 +100,7 @@ function draw() {
       ctx.fillStyle = colors[grid[y][x]] || "#1e293b";
       ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
 
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.strokeStyle = "rgba(15, 23, 42, 0.08)";
       ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
     }
   }
