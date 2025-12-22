@@ -14,7 +14,6 @@ let ws;
 let grid = [];
 let agent = { x: 0, y: 0 };
 let cellSize = 40;
-let learning = true;
 
 const actionNames = ["Up", "Down", "Left", "Right"];
 
@@ -30,7 +29,6 @@ function connect() {
     if (data.grid) {
       grid = data.grid;
       agent = data.agent_pos;
-      learning = data.learning;
       updateStats(data);
       draw();
       if (data.done) {
@@ -131,7 +129,6 @@ document.getElementById("reset").addEventListener("click", () => {
 });
 
 document.getElementById("toggle-learning").addEventListener("click", () => {
-  learning = !learning;
   sendMessage("toggle_learning");
 });
 

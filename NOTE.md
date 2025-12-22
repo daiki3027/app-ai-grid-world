@@ -5,7 +5,7 @@
 * FastAPI
 * WebSocket（リアルタイム配信）
 * フロントは依存ゼロの HTML + Vanilla JS（Canvas描画）
-* 学習アルゴリズムは **Q-learning（テーブル）**。深層学習は不要。
+* 学習アルゴリズムは **DQN（CNN + リプレイ + ターゲットネット）**。
 
 ### 2. アプリ仕様（必須）
 
@@ -31,7 +31,7 @@
 
   * Start（学習開始）
   * Pause（一時停止）
-  * Reset（Qテーブル初期化）
+  * Reset（DQNの状態と環境を初期化）
   * Toggle AI（学習ON/OFF。OFFのときはランダム行動でも良い）
 * スピード調整（例：1x/5x/20x）。内部ループで間引きでもOK。
 
@@ -46,12 +46,12 @@
   * epsilon
   * done
   * last_action
-* Q-learning：
+* DQN：
 
-  * 状態は (x, y) の離散状態でOK
+  * 観測はエージェント中心の 5x5 パッチ（壁外は壁扱い、エージェントは 8 を描画）
   * 行動は4つ
-  * α（学習率）、γ（割引率）、ε（探索率）を設定。εは減衰させる（例：0.995）
-* 乱数seedは固定できるように（再現性）。
+  * CNN ベースの Q ネットワーク、リプレイバッファ、ターゲットネット、ε-greedy 減衰
+  * 乱数seedは固定できるように（再現性）。
 
 ### 5. プロジェクト構成
 
@@ -59,7 +59,7 @@
 
   * app/main.py（FastAPI起動、WSエンドポイント、静的配信もここでOK）
   * app/gridworld.py（環境）
-  * app/qlearning.py（エージェント）
+  * app/dqn.py（エージェント）
 * frontend/
 
   * index.html
