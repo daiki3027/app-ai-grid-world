@@ -217,11 +217,18 @@ app.add_middleware(
 )
 
 frontend_dir = Path(__file__).resolve().parents[2] / "frontend"
+favicon_path = frontend_dir / "favicon.svg"
 
 
 @app.get("/")
 async def index():
     return FileResponse(frontend_dir / "index.html")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse(favicon_path, media_type="image/svg+xml")
+
 
 app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 

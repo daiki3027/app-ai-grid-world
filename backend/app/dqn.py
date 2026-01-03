@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+import warnings
 from collections import deque
 from dataclasses import dataclass
 from typing import List, Sequence, Tuple
@@ -8,6 +9,13 @@ from typing import List, Sequence, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+# Suppress PyTorch prototype warning for nested tensors used by Transformer with padding masks.
+warnings.filterwarnings(
+    "ignore",
+    message="The PyTorch API of nested tensors is in prototype stage",
+    category=UserWarning,
+)
 
 
 def _set_global_seeds(seed: int | None) -> None:
