@@ -8,9 +8,16 @@ const rewardEl = document.getElementById("total_reward");
 const successEl = document.getElementById("success_rate");
 const learningEl = document.getElementById("learning");
 const speedEl = document.getElementById("speed");
+const plannerModeEl = document.getElementById("planner_mode");
+const plannerUsedEl = document.getElementById("planner_used");
+const plannerStatusEl = document.getElementById("planner_status");
 const lastActionEl = document.getElementById("last_action");
 const lastLossEl = document.getElementById("last_loss");
 const avgLossEl = document.getElementById("avg_loss");
+const wmLastLossEl = document.getElementById("wm_last_loss");
+const wmAvgLossEl = document.getElementById("wm_avg_loss");
+const wmSamplesNeededEl = document.getElementById("wm_samples_needed");
+const wmBufferSizeEl = document.getElementById("wm_buffer_size");
 const avgEpRewardEl = document.getElementById("avg_ep_reward");
 
 let ws;
@@ -67,6 +74,8 @@ function updateStats(data) {
   successEl.textContent = data.success_rate;
   learningEl.textContent = data.learning ? "ON" : "OFF";
   speedEl.textContent = `${data.speed}x`;
+  plannerModeEl.textContent = data.planner_mode || "-";
+  plannerUsedEl.textContent = data.planner_used || "-";
   lastActionEl.textContent =
     data.last_action === null || data.last_action === undefined
       ? "-"
@@ -74,8 +83,27 @@ function updateStats(data) {
   lastLossEl.textContent = data.last_loss !== null && data.last_loss !== undefined ? data.last_loss : "-";
   avgLossEl.textContent =
     data.avg_recent_loss !== null && data.avg_recent_loss !== undefined ? data.avg_recent_loss : "-";
+  wmLastLossEl.textContent =
+    data.wm_last_loss !== null && data.wm_last_loss !== undefined ? data.wm_last_loss : "-";
+  wmAvgLossEl.textContent =
+    data.wm_avg_recent_loss !== null && data.wm_avg_recent_loss !== undefined ? data.wm_avg_recent_loss : "-";
+  const wmSamplesNeeded =
+    data.wm_samples_needed !== null && data.wm_samples_needed !== undefined ? data.wm_samples_needed : "-";
+  wmSamplesNeededEl.textContent = wmSamplesNeeded;
+  wmBufferSizeEl.textContent =
+    data.wm_buffer_size !== null && data.wm_buffer_size !== undefined ? data.wm_buffer_size : "-";
   avgEpRewardEl.textContent =
     data.avg_episode_reward !== null && data.avg_episode_reward !== undefined ? data.avg_episode_reward : "-";
+
+  if (data.planner_mode === "mpc") {
+    if (data.wm_ready) {
+      plannerStatusEl.textContent = "MPC (world model ready)";
+    } else {
+      plannerStatusEl.textContent = `DQN fallback (WM warming up, need ${wmSamplesNeeded} samples)`;
+    }
+  } else {
+    plannerStatusEl.textContent = "DQN";
+  }
 }
 
 function resizeCanvas() {
@@ -144,6 +172,13 @@ document.querySelectorAll(".speed button").forEach((btn) => {
   btn.addEventListener("click", () => {
     const speed = Number(btn.dataset.speed);
     sendMessage("speed", { value: speed });
+  });
+});
+
+document.querySelectorAll(".planner button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const mode = btn.dataset.planner;
+    sendMessage("planner_mode", { value: mode });
   });
 });
 

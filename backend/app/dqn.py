@@ -10,6 +10,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .memory_encoder import HistoryEncoder
+
 # Suppress PyTorch prototype warning for nested tensors used by Transformer with padding masks.
 warnings.filterwarnings(
     "ignore",
@@ -27,31 +29,6 @@ def _set_global_seeds(seed: int | None) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-class PatchEncoder(nn.Module):
-    """Small CNN encoder for 5x5 patches."""
-
-    def __init__(self, d_model: int):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)
-        self.fc = nn.Linear(32 * 5 * 5, d_model)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = torch.flatten(x, 1)
-        return self.fc(x)
-
-
-class PositionalEncoding(nn.Module):
-    def __init__(self, max_len: int, d_model: int):
-        super().__init__()
-        self.embedding = nn.Embedding(max_len, d_model)
-
-    def forward(self, positions: torch.Tensor) -> torch.Tensor:
-        return self.embedding(positions)
-
-
 class TransformerQNetwork(nn.Module):
     def __init__(
         self,
@@ -64,21 +41,15 @@ class TransformerQNetwork(nn.Module):
         action_pad_idx: int = 4,
     ):
         super().__init__()
-        self.seq_len = seq_len
-        self.d_model = d_model
-        self.action_pad_idx = action_pad_idx
-        self.encoder = PatchEncoder(d_model)
-        self.action_embed = nn.Embedding(action_dim + 1, d_model, padding_idx=action_pad_idx)
-        self.reward_mlp = nn.Sequential(
-            nn.Linear(1, d_model),
-            nn.ReLU(),
-            nn.Linear(d_model, d_model),
+        self.encoder = HistoryEncoder(
+            action_dim=action_dim,
+            seq_len=seq_len,
+            d_model=d_model,
+            nhead=nhead,
+            num_layers=num_layers,
+            dropout=dropout,
+            action_pad_idx=action_pad_idx,
         )
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=d_model, nhead=nhead, dim_feedforward=d_model * 2, dropout=dropout, batch_first=True
-        )
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-        self.positional = PositionalEncoding(max_len=seq_len, d_model=d_model)
         self.q_head = nn.Linear(d_model, action_dim)
 
     def forward(
@@ -97,25 +68,8 @@ class TransformerQNetwork(nn.Module):
         Returns:
             q_values: (B, action_dim)
         """
-        bsz, seq_len, _, _ = obs_seq.shape
-        x = obs_seq.view(bsz * seq_len, 1, 5, 5)
-        patch_emb = self.encoder(x).view(bsz, seq_len, self.d_model)
-        action_emb = self.action_embed(action_seq)
-        reward_emb = self.reward_mlp(reward_seq.unsqueeze(-1))
-        tokens = patch_emb + action_emb + reward_emb
-
-        positions = torch.arange(seq_len, device=obs_seq.device).unsqueeze(0).expand(bsz, seq_len)
-        tokens = tokens + self.positional(positions)
-
-        # padding mask: True for padded positions
-        max_len = seq_len
-        mask = torch.arange(max_len, device=obs_seq.device).expand(bsz, max_len) >= lengths.unsqueeze(1)
-        encoded = self.transformer(tokens, src_key_padding_mask=mask)
-
-        # Gather last valid token per sequence
-        idx = (lengths - 1).clamp(min=0).unsqueeze(1).unsqueeze(2).expand(bsz, 1, self.d_model)
-        last_token = encoded.gather(1, idx).squeeze(1)
-        return self.q_head(last_token)
+        memory = self.encoder.encode(obs_seq, action_seq, reward_seq, lengths)
+        return self.q_head(memory)
 
 
 @dataclass
@@ -356,3 +310,15 @@ class DQNAgent:
 
     def decay_epsilon(self) -> None:
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
+    def evaluate_q_values(
+        self,
+        obs_seq: List[List[List[float]]],
+        action_seq: List[int],
+        reward_seq: List[float],
+    ) -> List[float]:
+        """Deterministic Q evaluation without epsilon-greedy noise."""
+        obs_tensor, action_tensor, reward_tensor, length = self._prep_batch(obs_seq, action_seq, reward_seq)
+        with torch.no_grad():
+            q_values = self.policy_net(obs_tensor, action_tensor, reward_tensor, length).squeeze(0)
+        return q_values.detach().cpu().tolist()

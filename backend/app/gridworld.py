@@ -175,7 +175,7 @@ class GridWorld:
             self.position = (new_x, new_y)
             return StepResult(next_state=self.position, reward=reward, done=True, info={"status": status})
         elif (new_x, new_y) in self.traps:
-            reward -= 1.0
+            reward -= 2.0  # trapは即死扱い：即時損失を大きくして短期比較でも不利にする
             status = "trap"
             self.position = (new_x, new_y)
             return StepResult(next_state=self.position, reward=reward, done=True, info={"status": status})

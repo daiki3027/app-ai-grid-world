@@ -27,6 +27,11 @@
         <button data-speed="5">5x</button>
         <button data-speed="20">20x</button>
       </div>
+      <div class="planner">
+        <span>Planner:</span>
+        <button data-planner="dqn">DQN</button>
+        <button data-planner="mpc">MPC</button>
+      </div>
     </section>
 
     <section class="stats">
@@ -37,9 +42,16 @@
       <div>Success Rate (recent): <span id="success_rate">-</span></div>
       <div>Learning: <span id="learning">-</span></div>
       <div>Speed: <span id="speed">1x</span></div>
+      <div>Planner (requested): <span id="planner_mode">dqn</span></div>
+      <div>Planner (used this step): <span id="planner_used">-</span></div>
+      <div>MPC Status: <span id="planner_status">-</span></div>
       <div>Last Action: <span id="last_action">-</span></div>
       <div>Last Loss: <span id="last_loss">-</span></div>
       <div>Avg Loss (recent): <span id="avg_loss">-</span></div>
+      <div>WM Last Loss: <span id="wm_last_loss">-</span></div>
+      <div>WM Avg Loss (recent): <span id="wm_avg_loss">-</span></div>
+      <div>WM Samples Needed: <span id="wm_samples_needed">-</span></div>
+      <div>WM Buffer Size: <span id="wm_buffer_size">-</span></div>
       <div>Avg Episode Reward: <span id="avg_ep_reward">-</span></div>
       <div>Status: <span id="status">connecting...</span></div>
     </section>
